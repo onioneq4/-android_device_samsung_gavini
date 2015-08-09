@@ -134,7 +134,7 @@ BOARD_RECOVERY_SWIPE := true
 
 # SELinux
 BOARD_SEPOLICY_DIRS += \
-    device/samsung/gavini/selinux
+    device/samsung/gavini/sepolicy
 
 BOARD_SEPOLICY_UNION += \
     device.te \
@@ -143,7 +143,6 @@ BOARD_SEPOLICY_UNION += \
     drmserver.te \
     ueventd.te \
     domain.te \
-    system.te \
     file_contexts \
     wpa_supplicant.te \
     vold.te

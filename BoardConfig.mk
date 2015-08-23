@@ -17,6 +17,7 @@
 
 TARGET_OTA_ASSERT_DEVICE := gavini,i8530,GT-I8530
 TARGET_SPECIFIC_HEADER_PATH := device/samsung/gavini/include
+PRODUCT_VENDOR_KERNEL_HEADERS := device/samsung/gavini/include/kernel
 
 # Board
 TARGET_NO_BOOTLOADER := true

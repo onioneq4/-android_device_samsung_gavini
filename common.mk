@@ -50,7 +50,11 @@ PRODUCT_PACKAGES += \
     dhcpcd.conf
 PRODUCT_PROPERTY_OVERRIDES += \
     wifi.interface=wlan0 \
-    wifi.supplicant_scan_interval=150
+    wifi.supplicant_scan_interval=150 \
+    net.tethering.noprovisioning=true \
+    ro.disableWifiApFirmwareReload=true
+
+# Wi-Fi firmware
 $(call inherit-product-if-exists, hardware/broadcom/wlan/bcmdhd/firmware/bcm4330/device-bcm.mk)
 
 # Bluetooth
@@ -182,6 +186,14 @@ PRODUCT_TAGS += dalvik.gc.type-precise
 #ART
 PRODUCT_DEFAULT_PROPERTY_OVERRIDES += \
     dalvik.vm.dex2oat-flags=--no-watch-dog 
+
+# Root and USB
+ADDITIONAL_DEFAULT_PROPERTIES += \
+    ro.adb.secure=1 \
+    ro.secure=1 \
+    ro.allow.mock.location=0 \
+    ro.debuggable=1 \
+    ro.zygote=zygote32
 
 # KSM
 PRODUCT_PROPERTY_OVERRIDES += \

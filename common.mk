@@ -186,9 +186,21 @@ PRODUCT_PROPERTY_OVERRIDES += \
     dalvik.vm.heapmaxfree=4m \
     persist.sys.dalvik.multithread=true
 
-#ART
-PRODUCT_DEFAULT_PROPERTY_OVERRIDES += \
-    dalvik.vm.dex2oat-flags=--no-watch-dog 
+# HWUI tweaks
+PRODUCT_PROPERTY_OVERRIDES += \
+    ro.hwui.drop_shadow_cache_size=1 \
+    ro.hwui.gradient_cache_size=0.2 \
+    ro.hwui.layer_cache_size=6 \
+    ro.hwui.path_cache_size=2 \
+    ro.hwui.r_buffer_cache_size=1 \
+    ro.hwui.texture_cache_size=8
+
+# ART
+PRODUCT_PROPERTY_OVERRIDES += \
+    dalvik.vm.image-dex2oat-filter=everything \
+    dalvik.vm.dex2oat-filter=everything \
+    dalvik.vm.dex2oat-flags=--no-watch-dog \
+    dalvik.vm.dex2oat-swap=false
 
 # Root and USB
 ADDITIONAL_DEFAULT_PROPERTIES += \

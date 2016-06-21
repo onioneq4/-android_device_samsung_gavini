@@ -162,6 +162,10 @@ PRODUCT_PROPERTY_OVERRIDES += \
  PRODUCT_PROPERTY_OVERRIDES += \
     persist.sys.vold.switchablepair=sdcard0,sdcard1
 
+# Camera
+PRODUCT_PROPERTY_OVERRIDES += \
+    camera2.portability.force_api=1
+
 # HWUI tweaks
 PRODUCT_PROPERTY_OVERRIDES += \
     ro.hwui.drop_shadow_cache_size=1 \
@@ -178,9 +182,9 @@ PRODUCT_PROPERTY_OVERRIDES += \
     dalvik.vm.heapgrowthlimit=48m \
     dalvik.vm.heapsize=128m \
     dalvik.vm.heaptargetutilization=0.75 \
-    dalvik.vm.heapminfree=512k \
-    dalvik.vm.heapmaxfree=4m
-PRODUCT_TAGS += dalvik.gc.type-precise
+    dalvik.vm.heapminfree=1m \
+    dalvik.vm.heapmaxfree=4m \
+    persist.sys.dalvik.multithread=true
 
 #ART
 PRODUCT_DEFAULT_PROPERTY_OVERRIDES += \

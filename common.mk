@@ -95,9 +95,8 @@ PRODUCT_DEFAULT_PROPERTY_OVERRIDES += \
 
 # Misc Packages
 PRODUCT_PACKAGES += \
-    com.android.future.usb.accessory \
     SamsungServiceMode \
-    Torch
+    Snap
 
 # Filesystem management tools
 PRODUCT_PACKAGES += \

@@ -107,7 +107,7 @@ ENABLE_WEBGL := true
 BOARD_USES_SKTEXTBOX := true
 
 # CM PowerHAL
-TARGET_USES_CM_POWERHAL := true
+TARGET_POWERHAL_VARIANT := cm
 
 # Charging mode
 BOARD_CHARGING_MODE_BOOTING_LPM := /sys/devices/virtual/power_supply/battery/lpm_mode

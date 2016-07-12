@@ -36,7 +36,6 @@ PRODUCT_COPY_FILES += \
     $(COMMON_PATH)/configs/media_profiles.xml:system/etc/media_profiles.xml
 
 PRODUCT_PROPERTY_OVERRIDES += \
-    media.stagefright.use-awesome=false \
     persist.sys.media.use-awesome=true
 
 # Wi-Fi
@@ -84,6 +83,9 @@ PRODUCT_PACKAGES += \
     audio.r_submix.default \
     libaudioutils \
     libtinyalsa
+
+PRODUCT_PROPERTY_OVERRIDES += \
+    audio.offload.disable=true
 
 # U8500 Hardware
 $(call inherit-product, hardware/u8500/u8500.mk)

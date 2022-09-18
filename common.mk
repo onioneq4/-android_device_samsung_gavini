@@ -21,11 +21,6 @@ DEVICE_PACKAGE_OVERLAYS := $(COMMON_PATH)/overlay
 PRODUCT_AAPT_CONFIG := normal hdpi
 PRODUCT_AAPT_PREF_CONFIG := hdpi
 
-# U8500 Common init
-PRODUCT_COPY_FILES += \
-    $(COMMON_PATH)/rootdir/init.u8500.rc:root/init.u8500.rc \
-    $(COMMON_PATH)/rootdir/init.u8500.usb.rc:root/init.u8500.usb.rc
-
 # Graphics
 PRODUCT_PROPERTY_OVERRIDES += \
     ro.opengles.version=131072 \
@@ -84,13 +79,6 @@ $(call inherit-product, hardware/u8500/u8500.mk)
 PRODUCT_DEFAULT_PROPERTY_OVERRIDES += \
     persist.sys.usb.config=mtp,adb \
     persist.service.adb.enable=1
-
-# Charger
-PRODUCT_COPY_FILES += \
-    $(COMMON_PATH)/rootdir/lpm.rc:root/lpm.rc
-PRODUCT_PACKAGES += \
-    charger \
-    charger_res_images
 
 # Misc Packages
 PRODUCT_PACKAGES += \

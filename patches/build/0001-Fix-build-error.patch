@@ -1,0 +1,48 @@
+diff --git a/core/Makefile b/core/Makefile
+index 3ac9b0d..6415b20 100644
+--- a/core/Makefile
++++ b/core/Makefile
+@@ -996,12 +996,12 @@ define build-recoveryramdisk
+           > $(TARGET_RECOVERY_ROOT_OUT)/default.prop
+ endef
+ 
+-RECOVERYIMAGE_ID_FILE := $(PRODUCT_OUT)/recovery.id
++RECOVERYIMAGE_ID_FILE := $(PRODUCT_OUT)
+ # $(1): output file
+ define build-recoveryimage-target
+   $(if $(filter true,$(PRODUCTS.$(INTERNAL_PRODUCT).PRODUCT_SUPPORTS_VBOOT)), \
+     $(hide) $(MKBOOTIMG) $(INTERNAL_RECOVERYIMAGE_ARGS) $(BOARD_MKBOOTIMG_ARGS) --output $(1).unsigned, \
+-    $(hide) $(MKBOOTIMG) $(INTERNAL_RECOVERYIMAGE_ARGS) $(BOARD_MKBOOTIMG_ARGS) --output $(1) --id > $(RECOVERYIMAGE_ID_FILE))
++    $(hide) $(MKBOOTIMG) $(INTERNAL_RECOVERYIMAGE_ARGS) $(BOARD_MKBOOTIMG_ARGS) --output $(1))
+   $(if $(filter true,$(PRODUCTS.$(INTERNAL_PRODUCT).PRODUCT_SUPPORTS_BOOT_SIGNER)),\
+     $(BOOT_SIGNER) /recovery $(1) $(PRODUCTS.$(INTERNAL_PRODUCT).PRODUCT_VERITY_SIGNING_KEY).pk8 $(PRODUCTS.$(INTERNAL_PRODUCT).PRODUCT_VERITY_SIGNING_KEY).x509.pem $(1))
+   $(if $(filter true,$(PRODUCTS.$(INTERNAL_PRODUCT).PRODUCT_SUPPORTS_VBOOT)), \
+@@ -1119,11 +1119,13 @@ endif
+ 	$(call generate-userimage-prop-dictionary, $(ota_temp_root)/META/misc_info.txt)
+ 	$(hide) cp -r $(PRODUCT_OUT)/boot.img $(ota_temp_root)/BOOTABLE_IMAGES/
+ 	$(hide) cp -r $(PRODUCT_OUT)/recovery.img $(ota_temp_root)/BOOTABLE_IMAGES/
++ifndef BOARD_CANT_BUILD_RECOVERY_FROM_BOOT_PATCH
+ 	$(hide) ./build/tools/releasetools/make_recovery_patch $(ota_temp_root) $(ota_temp_root)
+ 	$(hide) rm -f $(TARGET_OUT)/bin/install-recovery.sh
+ 	$(hide) rm -f $(TARGET_OUT)/recovery-from-boot.p
+ 	$(hide) cp $(ota_temp_root)/SYSTEM/bin/install-recovery.sh $(TARGET_OUT)/bin/install-recovery.sh
+ 	$(hide) cp $(ota_temp_root)/SYSTEM/recovery-from-boot.p $(TARGET_OUT)/recovery-from-boot.p
++endif
+ 
+ $(RECOVERY_RESOURCE_ZIP): $(INSTALLED_RECOVERYIMAGE_TARGET)
+ 	$(hide) mkdir -p $(dir $@)
+diff --git a/tools/releasetools/common.py b/tools/releasetools/common.py
+index 6e49629..d3f12a9 100644
+--- a/tools/releasetools/common.py
++++ b/tools/releasetools/common.py
+@@ -1480,6 +1480,10 @@ def ParseCertificate(data):
+ 
+ def MakeRecoveryPatch(input_dir, output_sink, recovery_img, boot_img,
+                       info_dict=None):
++  pass
++
++def MakeRecoveryPatch2(input_dir, output_sink, recovery_img, boot_img,
++                      info_dict=None):
+   """Generate a binary patch that creates the recovery image starting
+   with the boot image.  (Most of the space in these images is just the
+   kernel, which is identical for the two, so the resulting patch

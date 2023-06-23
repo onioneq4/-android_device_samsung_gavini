@@ -1,0 +1,183 @@
+diff --git a/core/java/android/hardware/Camera.java b/core/java/android/hardware/Camera.java
+index dd15d38..9f786b6 100644
+--- a/core/java/android/hardware/Camera.java
++++ b/core/java/android/hardware/Camera.java
+@@ -2905,7 +2905,8 @@ public class Camera {
+          * @return the int value of the parameter
+          */
+         public int getInt(String key) {
+-            return Integer.parseInt(mMap.get(key));
++            /* Fix qcom camera saturation */
++            return Integer.getInteger(mMap.get(key),0);
+         }
+ 
+         /**
+diff --git a/core/java/android/view/ViewConfiguration.java b/core/java/android/view/ViewConfiguration.java
+index 93f5779..44490fc 100644
+--- a/core/java/android/view/ViewConfiguration.java
++++ b/core/java/android/view/ViewConfiguration.java
+@@ -61,7 +61,7 @@ public class ViewConfiguration {
+      * Defines the default duration in milliseconds before a press turns into
+      * a long press
+      */
+-    private static final int DEFAULT_LONG_PRESS_TIMEOUT = 500;
++    private static final int DEFAULT_LONG_PRESS_TIMEOUT = 250;
+ 
+     /**
+      * Defines the time between successive key repeats in milliseconds.
+@@ -73,7 +73,7 @@ public class ViewConfiguration {
+      * appropriate button to bring up the global actions dialog (power off,
+      * lock screen, etc).
+      */
+-    private static final int GLOBAL_ACTIONS_KEY_TIMEOUT = 500;
++    private static final int GLOBAL_ACTIONS_KEY_TIMEOUT = 250;
+ 
+     /**
+      * Defines the duration in milliseconds we will wait to see if a touch event
+@@ -87,7 +87,7 @@ public class ViewConfiguration {
+      * is a jump tap. If the user does not complete the jump tap within this interval, it is
+      * considered to be a tap.
+      */
+-    private static final int JUMP_TAP_TIMEOUT = 500;
++    private static final int JUMP_TAP_TIMEOUT = 250;
+ 
+     /**
+      * Defines the duration in milliseconds between the first tap's up event and
+diff --git a/core/jni/android_media_AudioRecord.cpp b/core/jni/android_media_AudioRecord.cpp
+index 6c2bbd4..4337cc5 100644
+--- a/core/jni/android_media_AudioRecord.cpp
++++ b/core/jni/android_media_AudioRecord.cpp
+@@ -257,6 +257,10 @@ android_media_AudioRecord_setup(JNIEnv *env, jobject thiz, jobject weak_this,
+     paa->flags = (audio_flags_mask_t)env->GetIntField(jaa, javaAudioAttrFields.fieldFlags);
+     ALOGV("AudioRecord_setup for source=%d tags=%s flags=%08x", paa->source, paa->tags, paa->flags);
+ 
++    /* Fix OK Google */
++    if (paa->source == 1999)
++	paa->source == (audio_source_t)1;
++
+     audio_input_flags_t flags = AUDIO_INPUT_FLAG_NONE;
+     if (paa->flags & AUDIO_FLAG_HW_HOTWORD) {
+         flags = AUDIO_INPUT_FLAG_HW_HOTWORD;
+diff --git a/libs/hwui/LayerRenderer.cpp b/libs/hwui/LayerRenderer.cpp
+index 00add29..353afe3 100644
+--- a/libs/hwui/LayerRenderer.cpp
++++ b/libs/hwui/LayerRenderer.cpp
+@@ -194,6 +194,13 @@ Layer* LayerRenderer::createRenderLayer(RenderState& renderState, uint32_t width
+         return nullptr;
+     }
+ 
++    /* Fix Dialer crash */
++    if (width == 0 && height == 0) {
++        ALOGW("Trying to obtain a zero-size layer, setting fall-back size 512x768");
++        width = 512;
++        height = 768;
++    }
++
+     caches.textureState().activateTexture(0);
+     Layer* layer = caches.layerCache.get(renderState, width, height);
+     if (!layer) {
+diff --git a/libs/hwui/renderthread/EglManager.cpp b/libs/hwui/renderthread/EglManager.cpp
+index eb332d5..902264e 100644
+--- a/libs/hwui/renderthread/EglManager.cpp
++++ b/libs/hwui/renderthread/EglManager.cpp
+@@ -291,11 +291,11 @@ bool EglManager::swapBuffers(EGLSurface surface, const SkRect& dirty,
+     if (CC_LIKELY(err == EGL_SUCCESS)) {
+         return true;
+     }
+-    if (err == EGL_BAD_SURFACE) {
++    if (err == EGL_BAD_SURFACE || err == EGL_BAD_NATIVE_WINDOW) {
+         // For some reason our surface was destroyed out from under us
+         // This really shouldn't happen, but if it does we can recover easily
+         // by just not trying to use the surface anymore
+-        ALOGW("swapBuffers encountered EGL_BAD_SURFACE on %p, halting rendering...", surface);
++        ALOGW("swapBuffers encountered EGL error %d on %p, halting rendering...", err, surface);
+         return false;
+     }
+     LOG_ALWAYS_FATAL("Encountered EGL error %d %s during rendering",
+diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/SignalClusterView.java b/packages/SystemUI/src/com/android/systemui/statusbar/SignalClusterView.java
+index ecaa809..ad38f56 100644
+--- a/packages/SystemUI/src/com/android/systemui/statusbar/SignalClusterView.java
++++ b/packages/SystemUI/src/com/android/systemui/statusbar/SignalClusterView.java
+@@ -439,7 +439,8 @@ public class SignalClusterView
+             mAirplane.setVisibility(View.GONE);
+         }
+ 
+-        if (mIsAirplaneMode && mWifiVisible) {
++	    // Fix no SIM in statusbar
++        if (mIsAirplaneMode) {
+             mWifiAirplaneSpacer.setVisibility(View.VISIBLE);
+         } else {
+             mWifiAirplaneSpacer.setVisibility(View.GONE);
+diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/phone/PhoneStatusBar.java b/packages/SystemUI/src/com/android/systemui/statusbar/phone/PhoneStatusBar.java
+index 7df8346..e1520e0 100644
+--- a/packages/SystemUI/src/com/android/systemui/statusbar/phone/PhoneStatusBar.java
++++ b/packages/SystemUI/src/com/android/systemui/statusbar/phone/PhoneStatusBar.java
+@@ -269,12 +269,12 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
+     private static final int BRIGHTNESS_CONTROL_LONG_PRESS_TIMEOUT = 750; // ms
+     private static final int BRIGHTNESS_CONTROL_LINGER_THRESHOLD = 20;
+ 
+-    public static final int FADE_KEYGUARD_START_DELAY = 100;
+-    public static final int FADE_KEYGUARD_DURATION = 300;
++    public static final int FADE_KEYGUARD_START_DELAY = 50;
++    public static final int FADE_KEYGUARD_DURATION = 150;
+     public static final int FADE_KEYGUARD_DURATION_PULSING = 96;
+ 
+     /** Allow some time inbetween the long press for back and recents. */
+-    private static final int LOCK_TO_APP_GESTURE_TOLERENCE = 200;
++    private static final int LOCK_TO_APP_GESTURE_TOLERENCE = 100;
+ 
+     /** If true, the system is in the half-boot-to-decryption-screen state.
+      * Prudently disable QS and notifications.  */
+@@ -2284,7 +2284,7 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
+                                 + mBackdropBack.getDrawable());
+                     }
+                     mBackdropFront.animate()
+-                            .setDuration(250)
++                            .setDuration(175)
+                             .alpha(0f).withEndAction(mHideBackdropFront);
+                 }
+             }
+@@ -2308,7 +2308,7 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
+                             // libhwui.
+                             .alpha(0.002f)
+                             .setInterpolator(mBackdropInterpolator)
+-                            .setDuration(300)
++                            .setDuration(200)
+                             .setStartDelay(0)
+                             .withEndAction(new Runnable() {
+                                 @Override
+diff --git a/services/core/java/com/android/server/am/ActivityManagerService.java b/services/core/java/com/android/server/am/ActivityManagerService.java
+index 6c076d06..788660b 100755
+--- a/services/core/java/com/android/server/am/ActivityManagerService.java
++++ b/services/core/java/com/android/server/am/ActivityManagerService.java
+@@ -331,7 +331,7 @@ public final class ActivityManagerService extends ActivityManagerNative
+ 
+     // Amount of time after a call to stopAppSwitches() during which we will
+     // prevent further untrusted switches from happening.
+-    static final long APP_SWITCH_DELAY_TIME = 5*1000;
++    static final long APP_SWITCH_DELAY_TIME = 1*1000;
+ 
+     // How long we wait for a launched process to attach to the activity manager
+     // before we decide it's never going to come up for real.
+diff --git a/services/core/java/com/android/server/location/GpsLocationProvider.java b/services/core/java/com/android/server/location/GpsLocationProvider.java
+index 833c340..a538806 100644
+--- a/services/core/java/com/android/server/location/GpsLocationProvider.java
++++ b/services/core/java/com/android/server/location/GpsLocationProvider.java
+@@ -954,11 +954,12 @@ public class GpsLocationProvider implements LocationProviderInterface {
+                 Log.e(TAG, "unable to parse SUPL_PORT: " + portString);
+             }
+         }
+-        if (mSuplServerHost != null
++       /* Skip GPS init */
++       /* if (mSuplServerHost != null
+                 && mSuplServerPort > TCP_MIN_PORT
+                 && mSuplServerPort <= TCP_MAX_PORT) {
+             native_set_agps_server(AGPS_TYPE_SUPL, mSuplServerHost, mSuplServerPort);
+-        }
++        }*/
+     }
+ 
+     /**
+-- 
+2.7.4
+

@@ -1,0 +1,158 @@
+diff --git a/camera/ICameraRecordingProxy.cpp b/camera/ICameraRecordingProxy.cpp
+index 517b64f..3dc0ffb 100644
+--- a/camera/ICameraRecordingProxy.cpp
++++ b/camera/ICameraRecordingProxy.cpp
+@@ -31,11 +31,6 @@ enum {
+     RELEASE_RECORDING_FRAME,
+ };
+ 
+-uint8_t ICameraRecordingProxy::baseObject = 0;
+-
+-size_t ICameraRecordingProxy::getCommonBaseAddress() {
+-    return (size_t)&baseObject;
+-}
+ 
+ class BpCameraRecordingProxy: public BpInterface<ICameraRecordingProxy>
+ {
+@@ -111,3 +106,4 @@ status_t BnCameraRecordingProxy::onTransact(
+ // ----------------------------------------------------------------------------
+ 
+ }; // namespace android
++
+diff --git a/include/camera/ICameraRecordingProxy.h b/include/camera/ICameraRecordingProxy.h
+index 4edf9cd..2aac284 100644
+--- a/include/camera/ICameraRecordingProxy.h
++++ b/include/camera/ICameraRecordingProxy.h
+@@ -83,12 +83,6 @@ public:
+     virtual status_t        startRecording(const sp<ICameraRecordingProxyListener>& listener) = 0;
+     virtual void            stopRecording() = 0;
+     virtual void            releaseRecordingFrame(const sp<IMemory>& mem) = 0;
+-
+-    // b/28466701
+-    static  size_t          getCommonBaseAddress();
+-  private:
+-
+-    static  uint8_t         baseObject;
+ };
+ 
+ // ----------------------------------------------------------------------------
+diff --git a/include/media/stagefright/CameraSource.h b/include/media/stagefright/CameraSource.h
+index 3dcfe4e..70149cc 100644
+--- a/include/media/stagefright/CameraSource.h
++++ b/include/media/stagefright/CameraSource.h
+@@ -243,9 +243,6 @@ protected:
+     status_t checkFrameRate(const CameraParameters& params,
+                     int32_t frameRate);
+ 
+-    static void adjustIncomingANWBuffer(IMemory* data);
+-    static void adjustOutgoingANWBuffer(IMemory* data);
+-
+     void stopCameraRecording();
+     status_t reset();
+ 
+diff --git a/media/libstagefright/CameraSource.cpp b/media/libstagefright/CameraSource.cpp
+index f6b4741..ca76311 100644
+--- a/media/libstagefright/CameraSource.cpp
++++ b/media/libstagefright/CameraSource.cpp
+@@ -27,10 +27,8 @@
+ #include <media/stagefright/MediaDefs.h>
+ #include <media/stagefright/MediaErrors.h>
+ #include <media/stagefright/MetaData.h>
+-#include <media/hardware/HardwareAPI.h>
+ #include <camera/Camera.h>
+ #include <camera/CameraParameters.h>
+-#include <camera/ICameraRecordingProxy.h>
+ #include <gui/Surface.h>
+ #include <utils/String8.h>
+ #include <cutils/properties.h>
+@@ -851,8 +849,6 @@ void CameraSource::releaseQueuedFrames() {
+     List<sp<IMemory> >::iterator it;
+     while (!mFramesReceived.empty()) {
+         it = mFramesReceived.begin();
+-        // b/28466701
+-        adjustOutgoingANWBuffer(it->get());
+         releaseRecordingFrame(*it);
+         mFramesReceived.erase(it);
+         ++mNumFramesDropped;
+@@ -873,9 +869,6 @@ void CameraSource::signalBufferReturned(MediaBuffer *buffer) {
+     for (List<sp<IMemory> >::iterator it = mFramesBeingEncoded.begin();
+          it != mFramesBeingEncoded.end(); ++it) {
+         if ((*it)->pointer() ==  buffer->data()) {
+-            // b/28466701
+-            adjustOutgoingANWBuffer(it->get());
+-
+             releaseOneRecordingFrame((*it));
+             mFramesBeingEncoded.erase(it);
+             ++mNumFramesEncoded;
+@@ -994,10 +987,6 @@ void CameraSource::dataCallbackTimestamp(int64_t timestampUs,
+     ++mNumFramesReceived;
+ 
+     CHECK(data != NULL && data->size() > 0);
+-
+-    // b/28466701
+-    adjustIncomingANWBuffer(data.get());
+-
+     mFramesReceived.push_back(data);
+     int64_t timeUs = mStartTimeUs + (timestampUs - mFirstFrameTimeUs);
+     mFrameTimes.push_back(timeUs);
+@@ -1011,24 +1000,6 @@ bool CameraSource::isMetaDataStoredInVideoBuffers() const {
+     return mIsMetaDataStoredInVideoBuffers;
+ }
+ 
+-void CameraSource::adjustIncomingANWBuffer(IMemory* data) {
+-    VideoNativeMetadata *payload =
+-            reinterpret_cast<VideoNativeMetadata*>(data->pointer());
+-    if (payload->eType == kMetadataBufferTypeANWBuffer) {
+-        payload->pBuffer = (ANativeWindowBuffer*)(((uint8_t*)payload->pBuffer) +
+-                ICameraRecordingProxy::getCommonBaseAddress());
+-    }
+-}
+-
+-void CameraSource::adjustOutgoingANWBuffer(IMemory* data) {
+-    VideoNativeMetadata *payload =
+-            reinterpret_cast<VideoNativeMetadata*>(data->pointer());
+-    if (payload->eType == kMetadataBufferTypeANWBuffer) {
+-        payload->pBuffer = (ANativeWindowBuffer*)(((uint8_t*)payload->pBuffer) -
+-                ICameraRecordingProxy::getCommonBaseAddress());
+-    }
+-}
+-
+ CameraSource::ProxyListener::ProxyListener(const sp<CameraSource>& source) {
+     mSource = source;
+ }
+diff --git a/services/camera/libcameraservice/api1/client2/StreamingProcessor.cpp b/services/camera/libcameraservice/api1/client2/StreamingProcessor.cpp
+index 9e6c0db..66d7b00 100644
+--- a/services/camera/libcameraservice/api1/client2/StreamingProcessor.cpp
++++ b/services/camera/libcameraservice/api1/client2/StreamingProcessor.cpp
+@@ -30,7 +30,6 @@
+ #include <utils/Trace.h>
+ #include <gui/BufferItem.h>
+ #include <gui/Surface.h>
+-#include <camera/ICameraRecordingProxy.h>
+ #include <media/hardware/HardwareAPI.h>
+ 
+ #include "common/CameraDeviceBase.h"
+@@ -827,9 +826,6 @@ status_t StreamingProcessor::processRecordingFrame() {
+             (uint8_t*)heap->getBase() + offset);
+         payload->eType = kMetadataBufferTypeANWBuffer;
+         payload->pBuffer = imgBuffer.mGraphicBuffer->getNativeBuffer();
+-        // b/28466701
+-        payload->pBuffer = (ANativeWindowBuffer*)((uint8_t*)payload->pBuffer -
+-                ICameraRecordingProxy::getCommonBaseAddress());
+         payload->nFenceFd = -1;
+ 
+         ALOGVV("%s: Camera %d: Sending out ANWBuffer %p",
+@@ -878,10 +874,6 @@ void StreamingProcessor::releaseRecordingFrame(const sp<IMemory>& mem) {
+         return;
+     }
+ 
+-    // b/28466701
+-    payload->pBuffer = (ANativeWindowBuffer*)(((uint8_t*)payload->pBuffer) +
+-            ICameraRecordingProxy::getCommonBaseAddress());
+-
+     // Release the buffer back to the recording queue
+     size_t itemIndex;
+     for (itemIndex = 0; itemIndex < mRecordingBuffers.size(); itemIndex++) {
+-- 
+2.7.4
+

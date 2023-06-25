@@ -17,16 +17,16 @@ PRODUCT_PROPERTY_OVERRIDES += \
 
 # Media
 PRODUCT_COPY_FILES += \
-    $(COMMON_PATH)/configs/omxloaders:system/etc/omxloaders \
-    $(COMMON_PATH)/configs/media_codecs.xml:system/etc/media_codecs.xml \
-    $(COMMON_PATH)/configs/media_profiles.xml:system/etc/media_profiles.xml
+    $(LOCAL_PATH)/configs/omxloaders:system/etc/omxloaders \
+    $(LOCAL_PATH)/configs/media_codecs.xml:system/etc/media_codecs.xml \
+    $(LOCAL_PATH)/configs/media_profiles.xml:system/etc/media_profiles.xml
 
 PRODUCT_PROPERTY_OVERRIDES += \
     persist.sys.media.use-awesome=true
 
 # Wi-Fi
 PRODUCT_COPY_FILES += \
-    $(COMMON_PATH)/configs/wpa_supplicant.conf:system/etc/wifi/wpa_supplicant.conf
+    $(LOCAL_PATH)/configs/wpa_supplicant.conf:system/etc/wifi/wpa_supplicant.conf
 PRODUCT_PACKAGES += \
     libnetcmdiface \
     wpa_supplicant \
@@ -44,12 +44,13 @@ $(call inherit-product-if-exists, hardware/broadcom/wlan/bcmdhd/firmware/bcm4330
 
 # Bluetooth
 PRODUCT_COPY_FILES += \
-    $(COMMON_PATH)/bluetooth/bt_vendor.conf:system/etc/bluetooth/bt_vendor.conf
+    $(LOCAL_PATH)/configs/bluetooth/bt_vendor.conf:system/etc/bluetooth/bt_vendor.conf
 
 # STE
 PRODUCT_COPY_FILES += \
-    $(COMMON_PATH)/configs/cspsa.conf:system/etc/cspsa.conf \
-    $(COMMON_PATH)/configs/usbid_init.sh:system/bin/usbid_init.sh
+    $(LOCAL_PATH)/configs/cspsa.conf:system/etc/cspsa.conf \
+    $(LOCAL_PATH)/configs/usbid_init.sh:system/bin/usbid_init.sh \
+    $(LOCAL_PATH)/configs/ste_modem.sh:system/etc/ste_modem.sh
 
 # RIL
 PRODUCT_PROPERTY_OVERRIDES += \
@@ -61,8 +62,9 @@ PRODUCT_PROPERTY_OVERRIDES += \
 
 # Audio
 PRODUCT_COPY_FILES += \
-    $(COMMON_PATH)/configs/audio_policy.conf:system/etc/audio_policy.conf \
-    $(COMMON_PATH)/configs/asound.conf:system/etc/asound.conf
+    $(LOCAL_PATH)/configs/audio_policy.conf:system/etc/audio_policy.conf \
+    $(LOCAL_PATH)/configs/asound.conf:system/etc/asound.conf \
+    $(LOCAL_PATH)/configs/adm.sqlite-u8500:system/etc/adm.sqlite-u8500
 PRODUCT_PACKAGES += \
     audio.usb.default \
     audio.a2dp.default \
@@ -99,9 +101,9 @@ PRODUCT_PACKAGES += \
 
 # Keylayout
 PRODUCT_COPY_FILES += \
-    $(COMMON_PATH)/configs/usr/keylayout/gpio-keys.kl:system/usr/keylayout/gpio-keys.kl \
-    $(COMMON_PATH)/configs/usr/keylayout/sec_touchkey.kl:system/usr/keylayout/sec_touchkey.kl \
-    $(COMMON_PATH)/configs/usr/keylayout/simple_remote.kl:system/usr/keylayout/simple_remote.kl
+    $(LOCAL_PATH)/configs/keylayout/gpio-keys.kl:system/usr/keylayout/gpio-keys.kl \
+    $(LOCAL_PATH)/configs/keylayout/sec_touchkey.kl:system/usr/keylayout/sec_touchkey.kl \
+    $(LOCAL_PATH)/configs/keylayout/simple_remote.kl:system/usr/keylayout/simple_remote.kl
 
 # These are the hardware-specific features
 PRODUCT_COPY_FILES += \
@@ -173,15 +175,6 @@ PRODUCT_PROPERTY_OVERRIDES += \
     dalvik.vm.heapmaxfree=4m \
     persist.sys.dalvik.multithread=true
 
-# HWUI tweaks
-PRODUCT_PROPERTY_OVERRIDES += \
-    ro.hwui.drop_shadow_cache_size=1 \
-    ro.hwui.gradient_cache_size=0.2 \
-    ro.hwui.layer_cache_size=6 \
-    ro.hwui.path_cache_size=2 \
-    ro.hwui.r_buffer_cache_size=1 \
-    ro.hwui.texture_cache_size=8
-
 # ART
 PRODUCT_PROPERTY_OVERRIDES += \
     dalvik.vm.image-dex2oat-filter=speed \
@@ -201,10 +194,6 @@ ADDITIONAL_DEFAULT_PROPERTIES += \
 PRODUCT_PROPERTY_OVERRIDES += \
     ro.ksm.default=1
 
-# STE
-PRODUCT_COPY_FILES += \
-    $(LOCAL_PATH)/configs/ste_modem.sh:system/etc/ste_modem.sh
-
 # Enable AAC 5.1 output
 PRODUCT_PROPERTY_OVERRIDES += \
     media.aac_51_output_enabled=true
@@ -222,7 +211,7 @@ $(call inherit-product, device/common/gps/gps_eu_supl.mk)
 
 # TWRP
 PRODUCT_COPY_FILES += \
-    $(LOCAL_PATH)/recovery/twrp.fstab:recovery/root/etc/twrp.fstab
+    $(LOCAL_PATH)/configs/recovery/twrp.fstab:recovery/root/etc/twrp.fstab
 
 # Init files
 PRODUCT_COPY_FILES += \
@@ -250,10 +239,6 @@ PRODUCT_COPY_FILES += \
 PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.hardware.sensor.gyroscope.xml:system/etc/permissions/android.hardware.sensor.gyroscope.xml \
     frameworks/native/data/etc/android.hardware.sensor.light.xml:system/etc/permissions/android.hardware.sensor.light.xml
-
-# Audio
-PRODUCT_COPY_FILES += \
-    $(LOCAL_PATH)/configs/adm.sqlite-u8500:system/etc/adm.sqlite-u8500
 
 PRODUCT_PACKAGES += \
     Projector

@@ -1,0 +1,37 @@
+diff --git a/media/java/android/media/MediaCodec.java b/media/java/android/media/MediaCodec.java
+index 5175830dd0918..598d42ef8c490 100644
+--- a/media/java/android/media/MediaCodec.java
++++ b/media/java/android/media/MediaCodec.java
+@@ -22,6 +22,7 @@
+ import android.media.MediaFormat;
+ import android.os.Bundle;
+ import android.view.Surface;
++import android.util.Log;
+ 
+ import java.nio.ByteBuffer;
+ import java.util.Arrays;
+@@ -205,9 +206,24 @@ public static MediaCodec createByCodecName(String name) {
+                 name, false /* nameIsType */, false /* unused */);
+     }
+ 
++    private String mName = "";
+     private MediaCodec(
+             String name, boolean nameIsType, boolean encoder) {
++
++	/* Meticulus / ace2nutzer:
++	 * STE OMX encoder don't seem to work when
++	 * directly accessed via this class, so  use software
++         * encoder for video/avc. Note: had to add OMX.ffmpeg.h264.encoder
++         * to media_codecs.xml. The configuration below works with Instagram (24/5/2016)
++         */
++	if(name.equals("video/avc") && encoder){
++		nameIsType = false;
++		name = "OMX.ffmpeg.h264.encoder";
++		Log.i("MediaCodec"," force use " + name + " isEncoder=" + String.valueOf(encoder));
++	}
++
+         native_setup(name, nameIsType, encoder);
++	mName = name;
+     }
+ 
+     @Override

@@ -1,0 +1,95 @@
+diff --git a/cmds/app_process/app_main.cpp b/cmds/app_process/app_main.cpp
+index cb27c5bb7e079..28752a5315adf 100644
+--- a/cmds/app_process/app_main.cpp
++++ b/cmds/app_process/app_main.cpp
+@@ -221,14 +221,14 @@ int main(int argc, char* const argv[])
+ 
+     if (zygote) {
+         runtime.start("com.android.internal.os.ZygoteInit",
+-                startSystemServer ? "start-system-server" : "", zygote);
++                startSystemServer ? "start-system-server" : "");
+     } else if (className) {
+         // Remainder of args get passed to startup class main()
+         runtime.mClassName = className;
+         runtime.mArgC = argc - i;
+         runtime.mArgV = argv + i;
+         runtime.start("com.android.internal.os.RuntimeInit",
+-                application ? "application" : "tool", zygote);
++                application ? "application" : "tool");
+     } else {
+         fprintf(stderr, "Error: no class name or --zygote supplied.\n");
+         app_usage();
+diff --git a/core/jni/AndroidRuntime.cpp b/core/jni/AndroidRuntime.cpp
+index b8acead517719..8518101432803 100644
+--- a/core/jni/AndroidRuntime.cpp
++++ b/core/jni/AndroidRuntime.cpp
+@@ -433,7 +433,7 @@ void AndroidRuntime::parseExtraOpts(char* extraOptsBuf)
+  *
+  * Returns 0 on success.
+  */
+-int AndroidRuntime::startVm(JavaVM** pJavaVM, JNIEnv** pEnv, bool zygote)
++int AndroidRuntime::startVm(JavaVM** pJavaVM, JNIEnv** pEnv)
+ {
+     int result = -1;
+     JavaVMInitArgs initArgs;
+@@ -634,15 +634,11 @@ int AndroidRuntime::startVm(JavaVM** pJavaVM, JNIEnv** pEnv, bool zygote)
+         }
+     }
+ 
+-    /*
+-     * Enable debugging only for apps forked from zygote.
+-     * Set suspend=y to pause during VM init and use android ADB transport.
+-     */
+-    if (zygote) {
+-        opt.optionString =
+-            "-agentlib:jdwp=transport=dt_android_adb,suspend=n,server=y";
+-        mOptions.add(opt);
+-    }
++    /* enable debugging; set suspend=y to pause during VM init */
++    /* use android ADB transport */
++    opt.optionString =
++        "-agentlib:jdwp=transport=dt_android_adb,suspend=n,server=y";
++    mOptions.add(opt);
+ 
+     ALOGD("CheckJNI is %s\n", checkJni ? "ON" : "OFF");
+     if (checkJni) {
+@@ -807,7 +803,7 @@ char* AndroidRuntime::toSlashClassName(const char* className)
+  * Passes the main function two arguments, the class name and the specified
+  * options string.
+  */
+-void AndroidRuntime::start(const char* className, const char* options, bool zygote)
++void AndroidRuntime::start(const char* className, const char* options)
+ {
+     ALOGD("\n>>>>>> AndroidRuntime START %s <<<<<<\n",
+             className != NULL ? className : "(unknown)");
+@@ -840,7 +836,7 @@ void AndroidRuntime::start(const char* className, const char* options, bool zygo
+     JniInvocation jni_invocation;
+     jni_invocation.Init(NULL);
+     JNIEnv* env;
+-    if (startVm(&mJavaVM, &env, zygote) != 0) {
++    if (startVm(&mJavaVM, &env) != 0) {
+         return;
+     }
+     onVmCreated(env);
+diff --git a/include/android_runtime/AndroidRuntime.h b/include/android_runtime/AndroidRuntime.h
+index e8e869da1e918..0b3ce9a261b41 100644
+--- a/include/android_runtime/AndroidRuntime.h
++++ b/include/android_runtime/AndroidRuntime.h
+@@ -64,7 +64,7 @@ class AndroidRuntime
+ 
+     int addVmArguments(int argc, const char* const argv[]);
+ 
+-    void start(const char *classname, const char* options, bool zygote);
++    void start(const char *classname, const char* options);
+ 
+     void exit(int code);
+ 
+@@ -116,7 +116,7 @@ class AndroidRuntime
+ private:
+     static int startReg(JNIEnv* env);
+     void parseExtraOpts(char* extraOptsBuf);
+-    int startVm(JavaVM** pJavaVM, JNIEnv** pEnv, bool zygote);
++    int startVm(JavaVM** pJavaVM, JNIEnv** pEnv);
+ 
+     Vector<JavaVMOption> mOptions;
+     bool mExitWithoutCleanup;

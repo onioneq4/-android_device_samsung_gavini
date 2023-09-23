@@ -127,11 +127,14 @@ on boot
     mkdir /data/gps 771 system system
     chown system system /data/gps
 
-    # Permissions for projector
-    chmod 0646 /sys/class/sec/sec_projector/proj_key
-    chmod 0646 /sys/class/sec/sec_projector/motor_verify
-    chmod 0646 /sys/class/sec/sec_projector/rotate_screen
-    chmod 0646 /sys/class/sec/sec_projector/brightness
+    # Permissions for projector    
+    chmod 0666 /sys/class/sec/sec_projector/proj_key
+    chmod 0666 /sys/class/sec/sec_projector/brightness
+    chmod 0666 /sys/class/sec/sec_projector/rotate_screen
+    chmod 0666 /sys/class/sec/sec_projector/projection_verify
+    chmod 0666 /sys/class/sec/sec_projector/motor_verify
+    chmod 0444 /sys/class/sec/sec_projector/retval
+    chmod 0444 /sys/class/sec/sec_projector/screen_direction
 
 service gpsd /system/bin/gpsd -c /system/etc/gps.xml
     class main

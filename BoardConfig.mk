@@ -15,7 +15,8 @@
 # limitations under the License.
 #
 
-TARGET_SPECIFIC_HEADER_PATH := device/samsung/u8500-common/include
+TARGET_OTA_ASSERT_DEVICE := gavini,i8530,GT-I8530
+TARGET_SPECIFIC_HEADER_PATH := device/samsung/gavini/include
 
 # Board
 TARGET_NO_BOOTLOADER := true
@@ -51,9 +52,11 @@ TARGET_GLOBAL_CFLAGS += -mtune=cortex-a9 -mfpu=neon -mfloat-abi=softfp
 TARGET_GLOBAL_CPPFLAGS += -mtune=cortex-a9 -mfpu=neon -mfloat-abi=softfp
 
 # Kernel
+TARGET_KERNEL_SOURCE := kernel/samsung/gavini
+TARGET_KERNEL_CONFIG := cyanogenmod_i8530_defconfig
 BOARD_KERNEL_PAGESIZE := 4096
 BOARD_KERNEL_BASE := 0x40000000
-BOARD_CUSTOM_BOOTIMG_MK := device/samsung/u8500-common/shbootimg.mk
+BOARD_CUSTOM_BOOTIMG_MK := device/samsung/gavini/shbootimg.mk
 
 # Graphics
 USE_OPENGL_RENDERER := true
@@ -61,7 +64,7 @@ HWUI_COMPILE_FOR_PERF := true
 BOARD_EGL_WORKAROUND_BUG_10194508 := true
 TARGET_RUNNING_WITHOUT_SYNC_FRAMEWORK := true
 COMMON_GLOBAL_CFLAGS += -DFORCE_SCREENSHOT_CPU_PATH
-BOARD_EGL_CFG := device/samsung/u8500-common/configs/egl.cfg
+BOARD_EGL_CFG := device/samsung/gavini/configs/egl.cfg
 
 # Wifi
 BOARD_WLAN_DEVICE                := bcmdhd
@@ -84,10 +87,23 @@ BOARD_NO_APSME_ATTR              := true
 # Bluetooth
 BOARD_HAVE_BLUETOOTH := true
 BOARD_HAVE_BLUETOOTH_BCM := true
-BOARD_BLUEDROID_VENDOR_CONF := device/samsung/u8500-common/bluetooth/vnd_u8500.txt
+BOARD_BLUEDROID_VENDOR_CONF := device/samsung/gavini/bluetooth/vnd_u8500.txt
+BOARD_BLUETOOTH_BDROID_BUILDCFG_INCLUDE_DIR := device/samsung/gavini/bluetooth
+
+# Vibrator
+BOARD_HAS_VIBRATOR_IMPLEMENTATION := ../../device/samsung/gavini/vibrator/vibrator.c
+
+# Hardware tunables (device parts replacement)
+BOARD_HARDWARE_CLASS := device/samsung/gavini/cmhw
+
+# Recovery
+TARGET_RECOVERY_FSTAB := device/samsung/gavini/rootdir/fstab.samsunggavini
+
+# Disable legacy sensors using because gavini has gyro
+BOARD_USE_LEGACY_SENSORS_FUSION := false
 
 # RIL
-BOARD_RIL_CLASS := ../../../device/samsung/u8500-common/ril/
+BOARD_RIL_CLASS := ../../../device/samsung/gavini/ril/
 
 # Audio
 BOARD_USES_ALSA_AUDIO := true
@@ -107,9 +123,9 @@ TARGET_USE_CUSTOM_LUN_FILE_PATH := "/sys/devices/platform/musb-ux500.0/musb-hdrc
 BOARD_CHARGING_MODE_BOOTING_LPM := /sys/devices/virtual/power_supply/battery/lpm_mode
 
 # Recovery
-BOARD_CUSTOM_GRAPHICS := ../../../device/samsung/u8500-common/recovery/graphics.c
+BOARD_CUSTOM_GRAPHICS := ../../../device/samsung/gavini/recovery/graphics.c
 BOARD_UMS_LUNFILE := "/sys/devices/platform/musb-ux500.0/musb-hdrc/gadget/lun0/file"
-BOARD_CUSTOM_RECOVERY_KEYMAPPING := ../../device/samsung/u8500-common/recovery/recovery_keys.c
+BOARD_CUSTOM_RECOVERY_KEYMAPPING := ../../device/samsung/gavini/recovery/recovery_keys.c
 BOARD_USES_MMCUTILS := true
 BOARD_HAS_NO_MISC_PARTITION := true
 BOARD_HAS_NO_SELECT_BUTTON := true
@@ -118,7 +134,7 @@ BOARD_RECOVERY_SWIPE := true
 
 # SELinux
 BOARD_SEPOLICY_DIRS += \
-    device/samsung/u8500-common/selinux
+    device/samsung/gavini/selinux
 
 BOARD_SEPOLICY_UNION += \
     device.te \
@@ -136,7 +152,7 @@ BOARD_SEPOLICY_UNION += \
 COMMON_GLOBAL_CFLAGS += -DRECOVERY_CANT_USE_CONFIG_EXT4_FS_XATTR
 
 # Releasetools
-TARGET_RELEASETOOLS_EXTENSIONS := device/samsung/u8500-common
+TARGET_RELEASETOOLS_EXTENSIONS := device/samsung/gavini
 
 # Misc
 COMMON_GLOBAL_CFLAGS += -DNEEDS_VECTORIMPL_SYMBOLS

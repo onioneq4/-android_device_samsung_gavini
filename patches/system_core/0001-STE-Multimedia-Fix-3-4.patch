@@ -60,34 +60,23 @@ index 882a8b2..495b90d 100644
  
  /*
   * LightFlattenable is a protocol allowing object to serialize themselves out
-diff --git a/libcutils/android_reboot.c b/libcutils/android_reboot.c
-index 326d402..1094754 100644
---- a/libcutils/android_reboot.c
-+++ b/libcutils/android_reboot.c
-@@ -93,7 +93,11 @@ static void remount_ro(void)
- 
- 
-     /* Now poll /proc/mounts till it's done */
-+#ifdef STE_HARDWARE
-+    while (!remount_ro_done() && (cnt < 50)) {
-+#else
-     while (!remount_ro_done() && (cnt < 3600)) {
-+#endif
-         usleep(100000);
-         cnt++;
-     }
 diff --git a/libutils/Android.mk b/libutils/Android.mk
-index 3024d2f..00b6b48 100644
+index b1dc1f8..44f69c1 100644
 --- a/libutils/Android.mk
 +++ b/libutils/Android.mk
-@@ -22,6 +22,7 @@ commonSources:= \
- 	BlobCache.cpp \
- 	CallStack.cpp \
- 	FileMap.cpp \
-+	Flattenable.cpp \
- 	JenkinsHash.cpp \
- 	LinearAllocator.cpp \
- 	LinearTransform.cpp \
+@@ -44,6 +44,12 @@ commonSources:= \
+ 	VectorImpl.cpp \
+ 	misc.cpp
+ 
++
++ifeq ($(BOARD_USES_STE_HARDWARE),true)
++	commonSources += Flattenable.cpp
++endif
++
++
+ host_commonCflags := -DLIBUTILS_NATIVE=1 $(TOOL_CFLAGS) -Werror
+ 
+ ifeq ($(HOST_OS),windows)
 diff --git a/libutils/Flattenable.cpp b/libutils/Flattenable.cpp
 new file mode 100644
 index 0000000..1f2ffaa
@@ -119,5 +108,5 @@ index 0000000..1f2ffaa
 +
 +}; // namespace android
 -- 
-2.5.0
+2.1.0
 
